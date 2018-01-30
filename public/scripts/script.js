@@ -16,7 +16,6 @@ recognition.addEventListener('result', (e) => {
 
   console.log(text);
   console.log('Confidence: ' + e.results[0][0].confidence);
-
   socket.emit('chat message', text);
 });
 
@@ -30,15 +29,19 @@ recognition.addEventListener('error', (err) => {
 });
 
 function synthVoice(text) {
-  const synth = window.speechSynthesis;
-  const utterance = new SpeechSynthesisUtterance(text);
-  let voices = window.speechSynthesis.getVoices();
-  utterance.voice = voices.filter(function (voice) {
-    return voice.name == 'Tessa';
-  })[0];
-  utterance.lang = 'en-US';
+  try {
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+    let voices = window.speechSynthesis.getVoices();
+    utterance.voice = voices.filter(function (voice) {
+      return voice.name == 'Tessa';
+    })[0];
+    utterance.lang = 'en-US';
 
-  synth.speak(utterance);
+    synth.speak(utterance);
+  } catch(error){
+    console.log(error);
+  }
 }
 
 socket.on('bot reply', function (replyText) {

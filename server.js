@@ -3,9 +3,13 @@ const express = require("express"),
   app = express(), 
   dotenv = require('dotenv'),
   axios = require("axios"),
-  { DF_CHAT_ACCESS_TOKEN } = require("./settings")
-  apiai = require('apiai')(DF_CHAT_ACCESS_TOKEN),
+  bodyParser = require("body-parser"),
+  chatToken = process.env.CHAT_TOKEN,
+  apiai = require('apiai')(chatToken),
   DF_SESSION_ID = Math.random() * 10000;
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use("/", express.static(__dirname + "/"));
 app.get('/', (req, res) => {
@@ -13,14 +17,13 @@ app.get('/', (req, res) => {
 });
 
 app.post("/api/wikiquery", (req, res) => {
-  console.log("POST", req.body);
-  let subject = req.body.wikiItem;
+  const params = req.body.result.parameters
+  const subject = params["wikiItem"];
+  const wikiItem = encodeURIComponent(subject);
 
-  var url = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&limit=1&generator=search&origin=*&search=${subject}`;
-  console.log(url);
+  var url = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&limit=1&generator=search&origin=*&search=${wikiItem}`;
   axios.get(url)
     .then((result) => {
-      console.log(result.data);
       // Remove listen link
       let summary = result.data[2].toString().replace("( listen))", "");
       // Remove phonetics
@@ -36,6 +39,11 @@ app.post("/api/wikiquery", (req, res) => {
     })
     .catch((err) => {
       console.log(err);
+      return res.json({
+        speech: "Something went wrong when I tried to find the answer.",
+        displayText: link,
+        source: 'wikiquery'
+      });
     });
 });
 
