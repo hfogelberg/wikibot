@@ -55,7 +55,6 @@ const io = require('socket.io')(server);
 io.on('connection', function (socket) {
   console.log("Socket io connected and listening");
   socket.on('chat message', (text) => {
-    console.log("Chat message is", text)
     // Get a reply from API.AI
 
     let apiaiReq = apiai.textRequest(text, {
@@ -63,7 +62,6 @@ io.on('connection', function (socket) {
     });
 
     apiaiReq.on('response', (response) => {
-      console.log('Dialogflow replies responds', response);
       let aiText = response.result.fulfillment.speech;
       console.log(aiText)
       socket.emit('bot reply', aiText); // Send the result back to the browser!
@@ -71,6 +69,7 @@ io.on('connection', function (socket) {
 
     apiaiReq.on('error', (error) => {
       console.log(error);
+      socket.emit('bot reply', 'Sorry, there was an error. Please ask me again.');
     });
 
     apiaiReq.end();
